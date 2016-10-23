@@ -100,16 +100,46 @@ metasync.sequential = function(fns, done, data) {
   else if (done) done(data);
 };
 
+
 // Data Collector
 //   expected - number of `collect()` calls expected
 //   done - on `done` callback(data)
 //
-metasync.DataCollector = function(expected, done) {
+metasync.DataCollector = function(expected,timeout,each,done) {
   this.expected = expected;
+  this.timeout = timeout;
+  this.each = each;
   this.data = {};
   this.count = 0;
+  this.tcount = 0;
+  this.code = -1;
   this.done = done;
+  this.globalTimeOut();
 };
+
+///Encapsulated function whith global timeout 
+metasync.DataCollector.prototype.globalTimeOut = function() {
+    this.localTimeOut();
+    setTimeout(() => {
+        if (this.code == -1){
+          this.code = 0;
+          console.log("GlobalTimeOut");
+          this.done(this.code,this.data);}
+    },this.timeout);
+  }
+  
+///Encapsulated function whith local timeout 
+metasync.DataCollector.prototype.localTimeOut = function() {
+  setTimeout(() => {
+    if (this.count == this.tcount++ && this.tcount < this.expected)
+      this.localTimeOut();
+      else
+        if (this.code == -1) {
+          this.code = 1;
+          console.log("LocalTimeOut");
+          this.done(this.code,this.data);}
+  },this.each);
+  }
 
 // Push data to collector
 //   key - key in result data
@@ -118,7 +148,7 @@ metasync.DataCollector = function(expected, done) {
 metasync.DataCollector.prototype.collect = function(key, data) {
   this.count++;
   this.data[key] = data;
-  if (this.expected === this.count) this.done(this.data);
+  if (this.expected === this.count && this.code == -1) this.done(this.code = 2,this.data);
 };
 
 // Asynchrous filter

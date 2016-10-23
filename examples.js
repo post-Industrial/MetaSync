@@ -101,11 +101,24 @@ function compositionTest(end) {
 
 function collectorTest(end) {
 
-  var dataCollector = new metasync.DataCollector(4, function(data) {
+  var dataCollector = new metasync.DataCollector(4,2000, 100, function(err,data) {
+    if (err == 2) {
     console.dir(Object.keys(data));
     console.log('Collector test done');
     end('DataCollector');
+    }
+    else 
+    {
+      if (data != undefined)
+      console.dir(Object.keys(data));
+      console.log('Collector test done with TimeOut');
+      end('DataCollector');
+    }
   });
+
+  setTimeout(function() {
+    dataCollector.collect('timer', { date: new Date() });
+  }, ASYNC_TIMEOUT);
 
   dataCollector.collect('user', { name: 'Marcus Aurelius' });
 
@@ -119,7 +132,7 @@ function collectorTest(end) {
 
   setTimeout(function() {
     dataCollector.collect('timer', { date: new Date() });
-  }, ASYNC_TIMEOUT);
+  }, 1000);
 
 }
 
